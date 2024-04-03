@@ -1166,9 +1166,12 @@ class LoadAnnotationsBEVDepth(object):
                                                 [0, 0, 1]])
         rot_mat = flip_mat @ (scale_mat @ rot_mat)
         if gt_boxes.shape[0] > 0:
+            # GT Boxes Center Point Coordinate XYZ
             gt_boxes[:, :3] = (
                 rot_mat @ gt_boxes[:, :3].unsqueeze(-1)).squeeze(-1)
+            # GT Boxes HLW
             gt_boxes[:, 3:6] *= scale_ratio
+            # GT Boxes Yaw
             gt_boxes[:, 6] += rotate_angle
             if flip_dx:
                 gt_boxes[:,

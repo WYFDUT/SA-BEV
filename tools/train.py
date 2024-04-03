@@ -7,6 +7,8 @@ import time
 import warnings
 from os import path as osp
 
+os.environ['CUDA_VISIBLE_DEVICES'] = '2'
+
 import mmcv
 import torch
 import torch.distributed as dist
@@ -59,7 +61,7 @@ def parse_args():
     group_gpus.add_argument(
         '--gpu-id',
         type=int,
-        default=0,
+        default=3,
         help='number of gpus to use '
         '(only applicable to non-distributed training)')
     parser.add_argument('--seed', type=int, default=0, help='random seed')

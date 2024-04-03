@@ -157,7 +157,7 @@ model = dict(
 
 # Data
 dataset_type = 'NuScenesDataset'
-data_root = 'data/nuscenes/'
+data_root = '/root/wyf/dataset/nuScenes/trainval/'
 file_client_args = dict(backend='disk')
 
 train_pipeline = [

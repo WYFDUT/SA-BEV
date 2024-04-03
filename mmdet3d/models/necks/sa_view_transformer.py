@@ -153,7 +153,9 @@ class SABEVPool(LSSViewTransformerBEVDepth):
     def __init__(self, loss_depth_weight=3.0, loss_semantic_weight=25, depthnet_cfg=dict(),
                  depth_threshold=1, semantic_threshold=0.25, **kwargs):
         super(SABEVPool, self).__init__(**kwargs)
+        # 3.0 
         self.loss_depth_weight = loss_depth_weight
+        # 25
         self.loss_semantic_weight = loss_semantic_weight
         self.depth_net = DepthNet(self.in_channels, self.in_channels,
                                   self.out_channels, self.D + 2, **depthnet_cfg)
@@ -389,18 +391,30 @@ class SABEVPool(LSSViewTransformerBEVDepth):
 
     def forward(self, input):
         (x, rots, trans, intrins, post_rots, post_trans, bda,
-         mlp_input, paste_idx, bda_paste) = input[:10]
+            mlp_input, paste_idx, bda_paste) = input[:10]
         x = x[0]
         B, N, C, H, W = x.shape
         x = x.view(B * N, C, H, W)
         # x = x.float()
         # mlp_input = mlp_input.float()
+
+        # x.shape(torch.Size([24, 512, 16, 44])) mlp_input.shape(torch.Size([4, 6, 27]))
+        
         x = self.depth_net(x, mlp_input)
+        # x.shape(torch.Size([24, 200, 16, 44])) self.D = 118
+
+        # breakpoint()
         depth_digit = x[:, :self.D, ...]
+        # 作者的semantic其实只是考虑了前后景 So self.D:self.D + 2
         semantic_digit = x[:, self.D:self.D + 2]
+        # 剩下这部分是feature
         tran_feat = x[:, self.D + 2:self.D + 2 + self.out_channels, ...]
+        # Softmax 归一化
         depth = depth_digit.softmax(dim=1)
         semantic = semantic_digit.softmax(dim=1)
+        # 作者直接设的是threshold方式，这边是不是不合理
+        # kept [B*N, self.D, H, W] 并且只保留了前景部分点
+        # 这个版本是Base版本，也就是说作者就是在BEVDepth的基础上，让输出的channel多了两个
         kept = (depth >= self.depth_threshold) * (semantic[:,1:2] >= self.semantic_threshold)
         return self.view_transform(input[0][0].shape, input, depth, tran_feat, kept, paste_idx, bda_paste), \
             (depth, semantic)
